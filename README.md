@@ -6,6 +6,14 @@ About
 -----
 A supernovae classifier based on http://arxiv.org/pdf/1209.3775v1.pdf
 
+Overview
+--------
+The volume of data obtained from modern astronomical imaging techniques (e.g. nightly automated scans from large telescopes) is too large for direct human inspection. While some objects are stable and will be visible in many images, others are transient and only visible in some images. Supernovae are in the latter class, and reliable detection of them requires continual processing of nightly images. This project explores automation of the process, using some hand-categorized images as training data. From the training data, the goal is to train automatic classifiers that are as accurate as possible and reasonably fast.
+
+Questions
+---------
+The primary question is a binary classification "is this image from a supernova"? Using hand-labelled data you will train a classifier and test it using cross-validation.
+
 Data
 ----
 sr_training_77811_stamp21.dat
