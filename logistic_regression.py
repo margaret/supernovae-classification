@@ -2,6 +2,8 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.cross_validation import train_test_split
 import sys
+import sklearn
+import pylab as pl
 
 
 DATA_PATH = "/home/datascience/Documents/project/supernovae-classification/" # Make this the /path/to/the/data
@@ -39,31 +41,30 @@ def compare_test_results(test, actual):
 
 	return {"tp" : tp_count/total_pos, "fp" : fp_count/total_neg, "tn" : tn_count/total_neg, "fn" : fn_count/total_pos }
 
+
 #True Positive/(True Positive + False Positive)
 def getPrecision(test, actual):
-	results = compare_test_results(test, actual)
-	tp = results['tp']
-	fp = results['fp']
-	return (tp / (tp + fp))
+	return sklearn.metrics.precision_score(actual, test)
 
 #True Positive/(True Positive + True Negative)
 def getRecall(test, actual):
-	results = compare_test_results(test, actual)
-	tp = results['tp']
-	fn = results['fn']
-	return (tp / (tp + fn))
+	return sklearn.metrics.recall_score(actual, test)
 
 #True Positive + True Negative / Everything
 def getAccuracy(test, actual):
-	results = compare_test_results(test, actual)
-	tp = results['tp']
-	tn = results['tn']
-	return (tp + tn) / len(test)
+	return sklearn.metrics.accuracy_score(actual, test)
 
 def results_summary(test, actual):
 	precision = getPrecision(test, actual)
 	recall = getRecall(test, actual)
 	accuracy = getAccuracy(test, actual)
+	results = {"precision": precision, "recall": recall, "accuracy": accuracy}
+	return results
+
+def results_summary_scikit(test, actual):
+	precision = sklearn.metrics.precision_score(actual, test)
+	recall = sklearn.metrics.recall_score(actual, test)
+	accuracy = sklearn.metrics.accuracy_score(actual, test)
 	results = {"precision": precision, "recall": recall, "accuracy": accuracy}
 	return results
 
@@ -89,6 +90,22 @@ def find_max_threshold(predicted):
 			max_threshold = float(i) / 100
 	print max_threshold
 
+def graph_roc(predicted, labels):
+	fpr, tpr, thresholds = sklearn.metrics.roc_curve(labels, predicted[:, 1])
+	roc_auc = sklearn.metrics.auc(fpr, tpr)
+	print "Area under the ROC curve : %f" % roc_auc
+
+	# Plot ROC curve
+	pl.clf()
+	pl.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+	pl.plot([0, 1], [0, 1], 'k--')
+	pl.xlim([0.0, 1.0])
+	pl.ylim([0.0, 1.0])
+	pl.xlabel('False Positive Rate')
+	pl.ylabel('True Positive Rate')
+	pl.title('Logistic Regression ROC')
+	pl.legend(loc="lower right")
+	pl.show()
 
 
 # Parse features and labels
@@ -101,6 +118,19 @@ feat_train, feat_test, label_train, label_test = train_test_split(feat, labels, 
 model = LogisticRegression()
 model.fit(feat_train, label_train)
 predicted = model.predict_proba(feat_test)
-find_max_threshold(predicted)
+predicted_test = model.predict(feat_test)
+#find_max_threshold(predicted)
+max_total = -1
+max_threshold = 0
+for i in range(1, 49):
+	prob_predicted = predict_using_probs(predicted, float(i)/100)
+	total = getAccuracy(prob_predicted, label_test) + getRecall(prob_predicted, label_test) + (2 *getPrecision(prob_predicted, label_test))
+	if total > max_total:
+		max_total = total
+		max_threshold = float(i)/100
+print "hello",  max_threshold
+
 prob_predicted = predict_using_probs(predicted, .45)
-print results_summary(prob_predicted, label_test)
+print results_summary_scikit(prob_predicted, label_test)
+
+graph_roc(predicted, label_test)
