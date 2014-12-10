@@ -2,3 +2,4 @@ samples_features_77811.csv
 sr_training_77811_stamp21.dat
 *~
 connect.sh
+*.pyc
